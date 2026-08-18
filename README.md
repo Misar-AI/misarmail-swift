@@ -15,6 +15,10 @@ Full reference: [`misarmail.com/docs`](https://misarmail.com/docs).
 > SwiftPM requires `Package.swift` at the repository root, so this SDK is
 > mirrored to its own repository. The monorepo URL will not resolve.
 
+> The standalone repository carries **no version tag yet**, so a `from:`
+> requirement cannot resolve until the first release publishes one. Until
+> then, depend on `branch: "main"`.
+
 ## Auth
 
 Use a MisarMail developer key (`msk_…`), created at
@@ -32,8 +36,8 @@ import MisarMail
 let mail = MisarMailClient(apiKey: "msk_your_key")
 
 try await mail.email.send([
-    "from": "you@yourdomain.com",
-    "to": ["someone@example.com"],
+    "from": ["email": "you@yourdomain.com"],
+    "to": [["email": "someone@example.com"]],
     "subject": "Hello",
     "html": "<p>Hi there</p>",
 ])
@@ -43,21 +47,31 @@ let contacts = try await mail.contacts.list()
 
 ## Plan limits
 
-A spent allowance answers `429` and a feature that is not on the plan answers
-`402`; both carry `code: "plan_limit_exceeded"`. The SDK raises
+Both a spent allowance and a feature that is not on the plan answer **`403`**,
+carrying `code: "plan_limit_exceeded"`. The SDK keys on that code rather than
+the status, which is why a refusal is typed correctly even though 403 is
+otherwise an authorization failure. The SDK raises
 `MisarMailError.planLimitExceeded` for either, and **does not retry** it — retrying cannot
 help until the allowance resets or the plan changes. Read ``upgradeURL`` to
 send the user somewhere useful.
 
-`GET /plan` reports the plan, its allowances and per-feature usage, so an
-expensive call can be checked before it is attempted rather than after it is
-refused.
+`GET /plan` returns `plan`, `sending` (the per-day and per-month email caps),
+`usage` — an array with one entry per metered feature, each carrying `used`,
+`limit` and `remaining` — and `upgrade`, which is null until a quota is tight.
+A null `limit` means unlimited, and `remaining` is null alongside it rather than
+0. Read it before an expensive call rather than discovering the ceiling through
+a refusal.
+
+The key needs the `read` or `subscription` scope.
 
 ```swift
 let plan = try await mail.plan.get()
 
 do {
-    _ = try await mail.campaigns.create(data: ["name": "Blast"])
+    _ = try await mail.campaigns.create(data: [
+        "name": "Blast", "subject": "We just shipped",
+        "fromName": "Your Name", "fromEmail": "you@yourdomain.com",
+    ])
 } catch MisarMailError.planLimitExceeded(_, _, let plan, let upgradeURL, _, let feature) {
     print("\(feature ?? "?") exhausted on \(plan ?? "?"): \(upgradeURL ?? "")")
 }

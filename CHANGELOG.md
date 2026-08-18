@@ -24,10 +24,11 @@ First release.
 ### Notes
 
 - Plan limits are enforced server-side against the subscription attached to the
-  API key. A spent allowance answers 429 and a feature not on the plan answers
-  402; both carry `code: "plan_limit_exceeded"`. Surfaced as a distinct error
-  type and never retried, since retrying cannot help until the allowance resets
-  or the plan changes.
+  API key. Both a spent allowance and a locked feature answer 403 carrying
+  `code: "plan_limit_exceeded"`. The client keys on that code rather than the
+  status — 403 is otherwise an authorization failure — and surfaces a distinct
+  error type that is never retried, since retrying cannot help until the
+  allowance resets or the plan changes.
 - Streams are never retried: replaying one that failed mid-flight would
   duplicate whatever the caller had already consumed.
 

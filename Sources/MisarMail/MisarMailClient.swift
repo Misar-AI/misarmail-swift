@@ -173,7 +173,6 @@ public final class MisarMailClient {
     public var templates:    TemplatesResource { TemplatesResource(client: self) }
     public var automations:  AutomationsResource { AutomationsResource(client: self) }
     public var domains:      DomainsResource { DomainsResource(client: self) }
-    public var aliases:      AliasesResource { AliasesResource(client: self) }
     public var dedicatedIPs: DedicatedIPsResource { DedicatedIPsResource(client: self) }
     public var abTests:      ABTestsResource { ABTestsResource(client: self) }
     public var sandbox:      SandboxResource { SandboxResource(client: self) }
@@ -185,7 +184,6 @@ public final class MisarMailClient {
     public var webhooks:     WebhooksResource { WebhooksResource(client: self) }
     public var usage:        UsageResource { UsageResource(client: self) }
     public var billing:      BillingResource { BillingResource(client: self) }
-    public var workspaces:   WorkspacesResource { WorkspacesResource(client: self) }
 }
 
 // MARK: - EmailResource
@@ -217,19 +215,21 @@ public class ContactsResource {
         try await client.request(method: "POST", path: "/contacts", body: data)
     }
 
-    /// GET /contacts/{id}
+    /// GET /contacts?id=<uuid> — query parameter, not a path segment.
     public func get(id: String) async throws -> [String: Any] {
-        try await client.request(method: "GET", path: "/contacts/\(id)")
+        try await client.request(method: "GET", path: "/contacts?id=\(id.addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed) ?? id)")
     }
 
-    /// PATCH /contacts/{id}
-    public func update(id: String, data: [String: Any]) async throws -> [String: Any] {
-        try await client.request(method: "PATCH", path: "/contacts/\(id)", body: data)
+    /// PATCH /contacts — the contact is identified by `email` in the body.
+    public func update(email: String, data: [String: Any]) async throws -> [String: Any] {
+        var body = data
+        body["email"] = email
+        return try await client.request(method: "PATCH", path: "/contacts", body: body)
     }
 
-    /// DELETE /contacts/{id}
+    /// DELETE /contacts?id=<uuid> — query parameter, not a path segment.
     public func delete(id: String) async throws -> [String: Any] {
-        try await client.request(method: "DELETE", path: "/contacts/\(id)")
+        try await client.request(method: "DELETE", path: "/contacts?id=\(id.addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed) ?? id)")
     }
 
     /// POST /contacts/import
@@ -359,61 +359,30 @@ public class DomainsResource {
 
     /// GET /domains
     public func list() async throws -> [String: Any] {
-        try await client.request(method: "GET", path: "/domains")
+        try await client.request(method: "GET", path: "/domains", useApiBase: true)
     }
 
     /// POST /domains
     public func create(data: [String: Any]) async throws -> [String: Any] {
-        try await client.request(method: "POST", path: "/domains", body: data)
+        try await client.request(method: "POST", path: "/domains", body: data, useApiBase: true)
     }
 
     /// GET /domains/{id}
     public func get(id: String) async throws -> [String: Any] {
-        try await client.request(method: "GET", path: "/domains/\(id)")
+        try await client.request(method: "GET", path: "/domains/\(id)", useApiBase: true)
     }
 
     /// POST /domains/{id}/verify
     public func verify(id: String) async throws -> [String: Any] {
-        try await client.request(method: "POST", path: "/domains/\(id)/verify")
+        try await client.request(method: "POST", path: "/domains/\(id)/verify", useApiBase: true)
     }
 
     /// DELETE /domains/{id}
     public func delete(id: String) async throws -> [String: Any] {
-        try await client.request(method: "DELETE", path: "/domains/\(id)")
+        try await client.request(method: "DELETE", path: "/domains/\(id)", useApiBase: true)
     }
 }
 
-// MARK: - AliasesResource
-
-public class AliasesResource {
-    private let client: MisarMailClient
-    init(client: MisarMailClient) { self.client = client }
-
-    /// GET /aliases
-    public func list() async throws -> [String: Any] {
-        try await client.request(method: "GET", path: "/aliases")
-    }
-
-    /// POST /aliases
-    public func create(data: [String: Any]) async throws -> [String: Any] {
-        try await client.request(method: "POST", path: "/aliases", body: data)
-    }
-
-    /// GET /aliases/{id}
-    public func get(id: String) async throws -> [String: Any] {
-        try await client.request(method: "GET", path: "/aliases/\(id)")
-    }
-
-    /// PATCH /aliases/{id}
-    public func update(id: String, data: [String: Any]) async throws -> [String: Any] {
-        try await client.request(method: "PATCH", path: "/aliases/\(id)", body: data)
-    }
-
-    /// DELETE /aliases/{id}
-    public func delete(id: String) async throws -> [String: Any] {
-        try await client.request(method: "DELETE", path: "/aliases/\(id)")
-    }
-}
 
 // MARK: - DedicatedIPsResource
 
@@ -656,57 +625,6 @@ public class BillingResource {
     }
 }
 
-// MARK: - WorkspacesResource
-
-public class WorkspacesResource {
-    private let client: MisarMailClient
-    init(client: MisarMailClient) { self.client = client }
-
-    /// GET {apiBase}/workspaces
-    public func list() async throws -> [String: Any] {
-        try await client.request(method: "GET", path: "/workspaces", useApiBase: true)
-    }
-
-    /// POST {apiBase}/workspaces
-    public func create(data: [String: Any]) async throws -> [String: Any] {
-        try await client.request(method: "POST", path: "/workspaces", body: data, useApiBase: true)
-    }
-
-    /// GET {apiBase}/workspaces/{id}
-    public func get(id: String) async throws -> [String: Any] {
-        try await client.request(method: "GET", path: "/workspaces/\(id)", useApiBase: true)
-    }
-
-    /// PATCH {apiBase}/workspaces/{id}
-    public func update(id: String, data: [String: Any]) async throws -> [String: Any] {
-        try await client.request(method: "PATCH", path: "/workspaces/\(id)", body: data, useApiBase: true)
-    }
-
-    /// DELETE {apiBase}/workspaces/{id}
-    public func delete(id: String) async throws -> [String: Any] {
-        try await client.request(method: "DELETE", path: "/workspaces/\(id)", useApiBase: true)
-    }
-
-    /// GET {apiBase}/workspaces/{wsId}/members
-    public func listMembers(wsId: String) async throws -> [String: Any] {
-        try await client.request(method: "GET", path: "/workspaces/\(wsId)/members", useApiBase: true)
-    }
-
-    /// POST {apiBase}/workspaces/{wsId}/members
-    public func inviteMember(wsId: String, data: [String: Any]) async throws -> [String: Any] {
-        try await client.request(method: "POST", path: "/workspaces/\(wsId)/members", body: data, useApiBase: true)
-    }
-
-    /// PATCH {apiBase}/workspaces/{wsId}/members/{userId}
-    public func updateMember(wsId: String, userId: String, data: [String: Any]) async throws -> [String: Any] {
-        try await client.request(method: "PATCH", path: "/workspaces/\(wsId)/members/\(userId)", body: data, useApiBase: true)
-    }
-
-    /// DELETE {apiBase}/workspaces/{wsId}/members/{userId}
-    public func removeMember(wsId: String, userId: String) async throws -> [String: Any] {
-        try await client.request(method: "DELETE", path: "/workspaces/\(wsId)/members/\(userId)", useApiBase: true)
-    }
-}
 
 // MARK: - Plan limits
 
