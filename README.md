@@ -20,7 +20,7 @@ macOS 12+, iOS 15+, tvOS 15+, watchOS 8+ and Linux. Because `URLSession.data(for
 ### Package.swift
 
 ```swift
-.package(url: "https://github.com/Misar-AI/misarmail-swift.git", from: "5.0.2")
+.package(url: "https://github.com/Misar-AI/misarmail-swift.git", from: "5.0.3")
 ```
 
 and add the product to your target:
