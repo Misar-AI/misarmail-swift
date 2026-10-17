@@ -20,7 +20,7 @@ macOS 12+, iOS 15+, tvOS 15+, watchOS 8+ and Linux. Because `URLSession.data(for
 ### Package.swift
 
 ```swift
-.package(url: "https://github.com/Misar-AI/misarmail-swift.git", from: "5.0.3")
+.package(url: "https://github.com/Misar-AI/misarmail-swift.git", from: "5.0.4")
 ```
 
 and add the product to your target:
@@ -432,4 +432,4 @@ for try await frame in mail.streaming.campaignSend(campaignID) {
 - Source — https://github.com/Misar-AI/misarmail-sdks
 - Swift Package — https://github.com/Misar-AI/misarmail-swift
 
-MIT © [Misar AI](https://misar.io)
+MIT © [Misar.AI](https://misar.io)
